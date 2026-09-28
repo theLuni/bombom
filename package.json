@@ -1,0 +1,25 @@
+{
+  "name": "bombom",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "BOMBOM — браузерный 3D тактический шутер (аналог CS2) с RPG-прокачкой",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "check": "node tools/map-check.mjs && node tools/sim-check.mjs && node tools/autoplay-check.mjs 10 && node tools/ui-check.mjs && node tools/boot-check.mjs",
+    "check:map": "node tools/map-check.mjs",
+    "check:sim": "node tools/sim-check.mjs",
+    "check:play": "node tools/autoplay-check.mjs 10",
+    "check:ui": "node tools/ui-check.mjs",
+    "check:boot": "node tools/boot-check.mjs"
+  },
+  "dependencies": {
+    "three": "^0.180.0",
+    "vite": "^5.4.21"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1"
+  }
+}
