@@ -236,6 +236,7 @@ export class UI {
       this.hideMenu();
       g.startRun();
       this.input.requestLock();
+      this.showTutorialHints();
     };
     this.btnSkills.onclick = () => { audio.click(); this.openSkillTree(); };
     this.btnArsenal.onclick = () => { audio.click(); this.openArsenal(); };
@@ -401,6 +402,19 @@ export class UI {
     this.refreshPersistent();
   }
 
+  /** Подсказки по управлению в начале первой операции. */
+  showTutorialHints() {
+    const hints = [
+      'WASD — движение · Shift — рывок · Ctrl — присесть · Space — прыжок',
+      'ЛКМ — огонь · ПКМ — прицел · R — перезарядка · 1/2/3 — оружие · 4-7 — гранаты',
+      'B — магазин · P — навыки · Tab — сводка · E — разминирование · Esc — пауза',
+      'Вы — спецназ: не дайте террористам заложить бомбу на точке A или B!',
+    ];
+    hints.forEach((text, i) => {
+      setTimeout(() => bus.emit(EV.TOAST, { text, kind: i === hints.length - 1 ? 'legend' : 'plain' }), 900 + i * 5200);
+    });
+  }
+
   flashText(elem) {
     elem.style.animation = 'none';
     void elem.offsetWidth;
@@ -486,7 +500,7 @@ export class UI {
     const skills = el('button', 'btn', 'Прокачка (RPG)');
     skills.onclick = () => { audio.click(); this.openSkillTree(true); };
     const menu = el('button', 'btn ghost', 'В главное меню');
-    menu.onclick = () => { audio.click(); this.closeOverlay(); this.showMenu(); };
+    menu.onclick = () => { audio.click(); this.closeOverlay(); this.game.abortRun(); this.showMenu(); };
     actions.appendChild(again);
     actions.appendChild(skills);
     actions.appendChild(menu);
@@ -800,10 +814,8 @@ export class UI {
     const toMenu = el('button', 'btn danger', 'Прервать операцию');
     toMenu.onclick = () => {
       this.closeOverlay();
-      this.game.state = 'idle';
-      this.game.pauseReason = null;
+      this.game.abortRun();
       this.showMenu();
-      this.game.runEnd('Операция прервана');
     };
     col.appendChild(toMenu);
     grid.appendChild(col);

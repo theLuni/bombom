@@ -456,10 +456,12 @@ export class Game {
     if (target.team === shooterTeam) return;
     let damage, armorDamage;
     if (opts.damageOverride) {
-      damage = opts.damageOverride * (shooter === this.player || !shooter ? 1 : 0.8);
+      damage = opts.damageOverride * (shooter === this.player || !shooter ? 1 : Math.min(1, 0.68 + this.roundNumber * 0.035));
       armorDamage = damage * 0.25;
     } else {
-      const mods = shooter === this.player ? this.mods : { damage: 0.8, armorPen: 0.05 };
+      // урон врагов по игроку плавно растёт с номером раунда (первый раунд — самый щадящий)
+      const botScale = Math.min(1, 0.68 + this.roundNumber * 0.035);
+      const mods = shooter === this.player ? this.mods : { damage: botScale, armorPen: 0.05 };
       const res = computeDamage({ weapon, zone, dist, mods, target });
       damage = res.damage;
       armorDamage = res.armorDamage;
@@ -570,6 +572,13 @@ export class Game {
     bus.emit(EV.ROUND_END, { summary: this.lastRoundSummary });
     bus.emit(EV.SCORE, { run: this.run });
 
+    if (win) {
+      // за выигранный раунд возвращается одна потерянная жизнь
+      if (this.run.lives < this.run.maxLives) {
+        this.run.lives += 1;
+        bus.emit(EV.TOAST, { text: `Раунд выигран — восстановлена жизнь (${this.run.lives}/${this.run.maxLives})`, kind: 'rare' });
+      }
+    }
     if (!win) {
       this.run.lives -= 1;
       if (this.run.lives <= 0) {
@@ -581,6 +590,19 @@ export class Game {
     } else if (this.roundNumber >= MAX_ROUNDS) {
       this.runEnd('Операция завершена — все раунды пройдены!');
     }
+  }
+
+  /** Прервать операцию и вернуться в меню (без экрана «финал»). */
+  abortRun() {
+    this.clearRound();
+    this.defuseProgress = 0;
+    this.player.resetForRound(this.world.playerSpawns[0]);
+    this.roundActive = false;
+    this.runActive = false;
+    this.state = 'idle';
+    this.pauseReason = null;
+    this.saveMeta();
+    bus.emit(EV.STATE, { player: this.player, run: this.run, meta: this.meta });
   }
 
   runEnd(reason) {

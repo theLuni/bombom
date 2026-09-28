@@ -285,6 +285,7 @@ export class Effects {
     scene.add(this.decals);
     this._q = new THREE.Quaternion();
     this._up = new THREE.Vector3(0, 0, 1);
+    this._xAxis = new THREE.Vector3(1, 0, 0);
     this._tmp = new THREE.Vector3();
     this.time = 0;
   }
@@ -348,8 +349,12 @@ export class Effects {
       }
     }
     mesh.position.copy(from);
-    mesh.lookAt(to);
-    const len = from.distanceTo(to);
+    // геометрия трассера вытянута по +X, поэтому направляем ось X вдоль выстрела
+    const dir = this._tmp.subVectors(to, from);
+    const len = dir.length();
+    if (len < 1e-4) return;
+    dir.divideScalar(len);
+    mesh.quaternion.setFromUnitVectors(this._xAxis, dir);
     mesh.scale.set(len, 1, 1);
     mesh.material.opacity = 0.9;
     mesh.material.color.set(color);

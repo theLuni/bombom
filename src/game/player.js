@@ -517,7 +517,6 @@ export class Player {
 
   useMedic() {
     const heal = this.mods.medicHeal;
-    if (this.mods.medic <= 0 && this.mods.medicHeal <= 15) { /* навык не прокачан — базовое лечение недоступно */ }
     if (this.medicCd > 0) { audio.error(); bus.emit(EV.TOAST, { text: 'Аптечка ещё не готова', kind: 'plain' }); return; }
     if (this.health >= this.mods.maxHealth) { bus.emit(EV.TOAST, { text: 'Здоровье полное', kind: 'plain' }); return; }
     this.medicCd = this.mods.medicCooldown;

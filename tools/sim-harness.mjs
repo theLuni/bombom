@@ -184,10 +184,11 @@ export class AutoPlayer {
 
     // покупки в начале раунда
     if (g.state === 'buy') {
-      const credits = g.run.credits;
-      if (!p.hasDefuseKit && credits > 900) g.buy('defusekit');
-      if (credits > 1200) g.buy('armor');
-      if (credits > 3200 && p.slots.primary !== 'rifle_ak' && p.slots.primary !== 'rifle_m4') g.buy('rifle_ak');
+      // порядок покупок: броня важнее всего, затем набор сапёра и автомат
+      if (g.run.credits > 1200 && p.armor < 95) g.buy('armor');
+      if (!p.hasDefuseKit && g.run.credits > 900) g.buy('defusekit');
+      if (g.run.credits > 3200 && p.slots.primary !== 'rifle_ak' && p.slots.primary !== 'rifle_scar') g.buy('rifle_ak');
+      if (g.run.credits > 6000 && p.slots.primary !== 'rifle_scar') g.buy('rifle_m4');
       if (g.buyTimer > 0.3) { input.endFrame(); return; }
     }
 

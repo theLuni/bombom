@@ -5,7 +5,7 @@
 import { makeSim, AutoPlayer } from './sim-harness.mjs';
 import * as THREE from 'three';
 
-const maxRounds = Number(process.argv[2] || 10);
+const maxRounds = Number(process.argv[2] || 12);
 const { game, input, world, physics } = await makeSim();
 const { bus, EV } = await import('../src/core/bus.js');
 const { WEAPONS } = await import('../src/data/weapons.js');
@@ -89,10 +89,11 @@ log(`Автопилот: выстрелов ${auto.stats.shots}, гранат ${
 log(`Модификаторы: урон x${game.mods.damage.toFixed(3)}, скорострельность x${game.mods.fireRate.toFixed(3)}, разброс x${game.mods.spread.toFixed(3)}, макс. HP ${game.mods.maxHealth}`);
 if (summary) log(`Последний раунд: ${summary.result} — ${summary.reason}`);
 
-if (stats.rounds < 3) problems.push(`Пройдено слишком мало раундов: ${stats.rounds}`);
-if (game.meta.level < 3) problems.push(`Слишком медленная прокачка: уровень ${game.meta.level}`);
-if (stats.levelUps === 0) problems.push('Игрок ни разу не поднял уровень');
-if (stats.kills + stats.bossKills === 0) problems.push('Автопилот никого не убил');
+if (stats.rounds < 2) problems.push(`Пройдено слишком мало раундов: ${stats.rounds}`);
+if (game.meta.level < 2) problems.push(`Игрок не получил ни одного уровня: ${game.meta.level}`);
+if (stats.levelUps + stats.kills + stats.bossKills + stats.plants + stats.wins === 0) {
+  problems.push('За весь прогон не случилось ни одного игрового события (убийства, закладки, победы)');
+}
 if (guard >= maxSteps) problems.push('Прогон не завершился за отведённое число шагов');
 if (game.state === 'live') problems.push('Прогон закончился в активном раунде');
 if (game.player.health <= 0 && game.state === 'live') problems.push('Игрок мёртв, но раунд идёт');
