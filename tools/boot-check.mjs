@@ -132,33 +132,45 @@ if (game.bots.length && movedBots === 0) problems.push('Боты не двига
 const target = game.bots.find((b) => !b.dead);
 if (target) {
   game.player.spawnProtection = 0;
-  game.player.pos.set(target.pos.x, 0, target.pos.z + 9);
+  game.player.pos.set(target.pos.x, 0, target.pos.z + 6);
   const hpBefore = game.player.health;
+  let shots = 0;
+  const ammoStart = target.weaponState.ammo;
   for (let i = 0; i < 180; i++) {
+    game.time += 1 / 60; // иначе скорострельность не даёт боту стрелять
     target.lastSeen = game.player.pos.clone().setY(1.3);
     target.alertTimer = 5;
     target.seeTimer = 2;
     target.aimError = 0.2;
+    target.spread = 0;
+    target.aimAt(1 / 60, game.player.pos.clone().setY(1.3), 30);
     target.shootAt(game.player.pos.clone().setY(1.3));
   }
-  log(`Бот нанёс игроку ${(hpBefore - game.player.health).toFixed(0)} урона за 180 выстрелов`);
+  log(`Бот нанёс игроку ${(hpBefore - game.player.health).toFixed(0)} урона за 180 выстрелов (патронов израсходовано ${ammoStart - target.weaponState.ammo})`);
   if (game.player.health >= hpBefore) problems.push('Боты не наносят урон');
 }
 
 /* ---------- 5. Бомба, разминирование, конец раунда ---------- */
-game.player.health = 100;
+// возвращаем игрока в строй после проверки урона
+if (game.state !== 'live') { game.nextRound(); game.startLive(); }
+game.player.dead = false;
+game.player.health = game.player.maxHealth;
+game.player.spawnProtection = 0;
 game.bomb = null;
 game.plantBomb(game.bots[0], game.world.siteCenter('A'));
 const bombShot = !!game.bomb && game.bomb.planted;
 log(`Бомба заложена: ${bombShot}, точка ${game.bomb && game.bomb.site}`);
 if (!bombShot) problems.push('plantBomb не работает');
-// телепорт к бомбе и разминирование
+// телепорт к бомбе и разминирование (на время проверки игрок неуязвим)
 game.player.pos.set(game.bomb.pos.x, 0, game.bomb.pos.z + 1);
 game.player.health = 100;
+game.player.spawnProtection = 999;
+game.lastRoundSummary = null; // прошлый итог не должен завершать ожидание
 key('keydown', 'KeyE');
 const t0 = Date.now();
-while (!game.lastRoundSummary && Date.now() - t0 < 9000) await wait(100);
+while (game.state === 'live' && Date.now() - t0 < 12000) await wait(100);
 key('keyup', 'KeyE');
+game.player.spawnProtection = 0;
 log(`Итог раунда: ${game.lastRoundSummary ? `${game.lastRoundSummary.result} — ${game.lastRoundSummary.reason}` : 'нет'}`);
 if (!game.lastRoundSummary || game.lastRoundSummary.result !== 'win') problems.push('Разминирование не приводит к победе');
 

@@ -228,6 +228,8 @@ export class Game {
 
   startRun() {
     this.run = this.newRun();
+    this.pauseReason = null;
+    this.lootOptions = null;
     this.roundNumber = 0;
     this.meta.stats.runs++;
     this.recomputeMods();
@@ -244,6 +246,8 @@ export class Game {
 
   nextRound() {
     this.roundNumber++;
+    // новый раунд не должен начинаться «на паузе» от старого оверлея
+    if (this.pauseReason === 'pause' || this.pauseReason === 'menu') this.pauseReason = null;
     this.clearRound();
     this.player.resetForRound(this.world.playerSpawns[0]);
     this.player.refillAmmo();
@@ -607,6 +611,8 @@ export class Game {
 
   runEnd(reason) {
     this.state = 'runEnd';
+    // забег окончен — необязательный выбор лута больше не блокирует игру
+    if (this.pauseReason === 'loot') { this.pauseReason = null; this.lootOptions = null; }
     this.roundActive = false;
     this.runActive = false;
     this.meta.stats.bestRound = Math.max(this.meta.stats.bestRound || 0, this.roundNumber);
